@@ -218,7 +218,7 @@ async function zipContainer(container: Container, opts: Options | null) {
     toast.id = 'progress'
     toast.classList.add('toast')
 
-    const files = Object.entries( container.files())
+    const files = Object.entries(container.files())
 
     const converter = new ProgressContainer('Convert')
     toast.append(converter.dom)
@@ -257,8 +257,9 @@ async function zipContainer(container: Container, opts: Options | null) {
         buffer = await convert(buffer, {
             progress: (perc) => {
                 kepubifyProgress.value = perc * 100
-            }
-        })
+            },
+            ...opts
+        },)
         kepubifyProgress.toggle()
     }
 
