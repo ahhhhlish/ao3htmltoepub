@@ -172,35 +172,7 @@ export class Container {
 
         return this.#image
     }
-
-    // async #adjustImage() {
-    //     if (!this.#image) return;
-    //     const img = document.querySelector('img')
-    //     if (!img) return;
-    //     const canvas = document.createElement('canvas')
-    //     const ctx = canvas.getContext('2d')
-
-    //     canvas.height = Math.min(img.naturalHeight, 2560)
-    //     canvas.width = canvas.height / 1.6
-
-
-    //     ctx?.drawImage(await createImageBitmap(new Blob([this.#image.data])), 0, 0, canvas.width, canvas.height)
-
-    //     console.log(img.naturalHeight, canvas.width)
-    //     const { type } = this.#image
-    //     await new Promise((res, rej) => {
-    //         canvas.toBlob(blob => {
-    //             if (blob) {
-                    
-    //                 this.processCover(blob, type).then(res)
-    //             } else {
-    //                 rej('failed to update cover')
-    //             }
-    //         }, type)
-    //     }).catch(console.error)
-
-    // }
-
+    
      files() {
         this.finalise()
         const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: new Uint8Array(this.#image.data) } : {}
