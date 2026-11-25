@@ -76,6 +76,7 @@ async function processCover(
     const img = coverContainer.querySelector('img') ?? document.createElement('img')
     img.src = resp.url
     img.alt = 'cover'
+
     img.classList.add('rounded')
 
     coverContainer.prepend(img)
@@ -150,15 +151,29 @@ function unzipFiles(data: Uint8Array<ArrayBuffer>) {
 
 function createZip(cb: (data: Uint8Array<ArrayBuffer>) => void) {
     const { promise, reject, resolve } = Promise.withResolvers<Uint8Array<ArrayBuffer>>()
-    const buffer: number[] = []
+    const buffers: Uint8Array<ArrayBuffer>[] = []
+
 
     const dir = new Zip((err, data, final) => {
         if (err) reject(err)
         else {
             cb(data)
-            buffer.push(...data)
+            buffers.push(data)
+
         }
-        if (final) resolve(new Uint8Array(buffer))
+        if (final) {
+            const buffer = new Uint8Array(buffers.reduce((prev, curr) => prev + curr.length, 0))
+
+            let length = 0;
+
+            for (const buf of buffers) {
+                buffer.set(buf, length)
+                length += buf.length
+            }
+
+            resolve(buffer)
+
+        }
     })
     return {
         dir,
@@ -186,8 +201,8 @@ class ProgressContainer {
         this.progress.max = Number(value)
     }
 
-    get value(){return this.progress.value}
-    set value(v) {this.progress.value = v}
+    get value() { return this.progress.value }
+    set value(v) { this.progress.value = v }
 
     inc() {
         this.progress.value++
@@ -198,14 +213,12 @@ class ProgressContainer {
     }
 }
 
- 
- 
 async function zipContainer(container: Container, opts: Options | null) {
     const toast = document.createElement('div')
     toast.id = 'progress'
     toast.classList.add('toast')
 
-    const files = Object.entries(container.files())
+    const files = Object.entries( container.files())
 
     const converter = new ProgressContainer('Convert')
     toast.append(converter.dom)
@@ -224,12 +237,12 @@ async function zipContainer(container: Container, opts: Options | null) {
 
     converter.toggle()
     const toEpub = createZip(() => converter.inc())
+
     files.forEach(([name, buffer]) => {
         const file = new AsyncZipDeflate(name)
         toEpub.dir.add(file)
 
         file.push(buffer, true)
-
     })
 
     toEpub.dir.end()
@@ -250,7 +263,7 @@ async function zipContainer(container: Container, opts: Options | null) {
     }
 
     const finalFiles = Object.entries({
-        mimetype: [strToU8('application/epub+zip'), { level: 0, consume: true }],
+        mimetype: [strToU8('application/epub+zip'), { level: 0 }],
         ...await unzipFiles(buffer),
         ['toc.xhtml']: strToU8(container.toc)
     } as Record<string, Uint8Array<ArrayBuffer> | [Uint8Array<ArrayBuffer>, AsyncZipOptions]>)
@@ -273,7 +286,6 @@ async function zipContainer(container: Container, opts: Options | null) {
             file.push(buffer, true)
         }
     })
-
     final.dir.end()
 
     buffer = await final.promise

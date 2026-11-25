@@ -164,7 +164,7 @@ export class Container {
         const buffer = await file.bytes();
         this.#image = {
             type,
-            url: URL.createObjectURL(new Blob([buffer])),
+            url: URL.createObjectURL(new Blob([buffer], {type})),
             data: buffer
         }
 
@@ -173,10 +173,37 @@ export class Container {
         return this.#image
     }
 
+    // async #adjustImage() {
+    //     if (!this.#image) return;
+    //     const img = document.querySelector('img')
+    //     if (!img) return;
+    //     const canvas = document.createElement('canvas')
+    //     const ctx = canvas.getContext('2d')
 
-    files() {
+    //     canvas.height = Math.min(img.naturalHeight, 2560)
+    //     canvas.width = canvas.height / 1.6
+
+
+    //     ctx?.drawImage(await createImageBitmap(new Blob([this.#image.data])), 0, 0, canvas.width, canvas.height)
+
+    //     console.log(img.naturalHeight, canvas.width)
+    //     const { type } = this.#image
+    //     await new Promise((res, rej) => {
+    //         canvas.toBlob(blob => {
+    //             if (blob) {
+                    
+    //                 this.processCover(blob, type).then(res)
+    //             } else {
+    //                 rej('failed to update cover')
+    //             }
+    //         }, type)
+    //     }).catch(console.error)
+
+    // }
+
+     files() {
         this.finalise()
-        const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: this.#image.data } : {}
+        const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: new Uint8Array(this.#image.data) } : {}
 
         this.pages.forEach((page) => {
             files[`${this.sluggedTitle}_split_${String(page.index).padStart(3, '0')}.xhtml`] = strToU8(page.create(this.doc.title))
