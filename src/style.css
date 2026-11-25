@@ -11,6 +11,10 @@
     > * {
         transition: 250ms opacity
     }
+
+    img + svg {
+        display: none;
+    }
 }
 
 main {
