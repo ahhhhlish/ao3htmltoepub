@@ -58,6 +58,8 @@ main {
 #message {
     opacity: 0;
     transition: opacity 250ms;
+    min-height: 1em;
+    @apply alert-error;
 
     &.visible {
         opacity: 1;
