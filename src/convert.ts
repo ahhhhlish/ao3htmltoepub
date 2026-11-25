@@ -168,13 +168,15 @@ export class Container {
             data: buffer
         }
 
+        console.debug(`Added image: `, this.#image)
+
         return this.#image
     }
 
 
     files() {
         this.finalise()
-        const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: [this.#image.data, { level: 0 }] } : {}
+        const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: this.#image.data } : {}
 
         this.pages.forEach((page) => {
             files[`${this.sluggedTitle}_split_${String(page.index).padStart(3, '0')}.xhtml`] = strToU8(page.create(this.doc.title))

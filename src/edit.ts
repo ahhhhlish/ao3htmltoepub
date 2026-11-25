@@ -74,7 +74,7 @@ async function processCover(
     }
     const resp = await container.processCover(file, type)
 
-    const img = document.createElement('img')
+    const img = coverContainer.querySelector('img') ?? document.createElement('img')
     img.src = resp.url
     img.alt = 'cover'
     img.classList.add('rounded')
@@ -153,15 +153,22 @@ function createZip(cb: (data: Uint8Array<ArrayBuffer>) => void) {
     const { promise, reject, resolve } = Promise.withResolvers<Uint8Array<ArrayBuffer>>()
     const buffer: number[] = []
 
-    const dir = new Zip()
-    dir.ondata = (err, data, final) => {
+    const dir = new Zip((err, data, final) => {
         if (err) reject(err)
         else {
             cb(data)
             buffer.push(...data)
         }
         if (final) resolve(new Uint8Array(buffer))
-    }
+    })
+    // dir.ondata = (err, data, final) => {
+    //     if (err) reject(err)
+    //     else {
+    //         cb(data)
+    //         buffer.push(...data)
+    //     }
+    //     if (final) resolve(new Uint8Array(buffer))
+    // }
     return {
         dir,
         promise
@@ -199,7 +206,7 @@ function progressContainer(label: string) {
         get value() { return this.bar.value },
         toggle() {
             wrapper.classList.toggle('alert-soft')
-         }
+        }
     }
 }
 async function zipContainer(container: Container, opts: Options | null) {
@@ -261,6 +268,9 @@ async function zipContainer(container: Container, opts: Options | null) {
     finalise.toggle()
 
     finalFiles.forEach(([name, fileData]) => {
+        if (import.meta.env.DEV) {
+            console.debug(`Adding file: %s`, name,fileData)
+        }
         if (fileData instanceof Uint8Array) {
             const file = new AsyncZipDeflate(name)
             final.dir.add(file)
@@ -288,5 +298,10 @@ async function zipContainer(container: Container, opts: Options | null) {
     const anchor = container.createDownload(download, buffer)
     anchor.classList.add('alert', 'alert-soft')
     toast.append(anchor)
-    anchor.click()
+
+    if (import.meta.env.DEV) {
+        console.log(container)
+    } else {
+        anchor.click()
+    }
 }
