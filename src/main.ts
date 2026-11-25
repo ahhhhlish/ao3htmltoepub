@@ -56,7 +56,7 @@ function resetDropZone() {
 const dropLabel = dropEpub.querySelector('label')!
 
 dropLabel.addEventListener('dragenter', (ev) => {
-  document.querySelector('#message')?.classList.remove('visible')
+ 
   const droppable = ev.dataTransfer?.items[0]?.type == "text/html"
   dropEpub.classList.add(droppable ? 'droppable' : 'no-drop')
 }, { passive: true })
@@ -81,4 +81,5 @@ htmlInput.addEventListener('change', () => { processFile(htmlInput.files?.item(0
 navigation.addEventListener('currententrychange', function () {
   [...document.forms].forEach(form => form.reset())
   document.querySelectorAll('.toast').forEach(el => el.remove())
+   document.querySelector('#message')?.classList.remove('visible')
 })

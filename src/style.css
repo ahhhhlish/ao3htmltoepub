@@ -54,6 +54,10 @@ main {
 #message {
     opacity: 0;
     transition: opacity 250ms;
+
+    &.visible {
+        opacity: 1;
+    }
 }
 
 h1 {
