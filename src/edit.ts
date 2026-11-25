@@ -21,7 +21,6 @@ function reset() {
 
 }
 
-
 navigation.addEventListener('navigate', (ev) => {
     if (!ev.canIntercept || ev.downloadRequest !== null) return
 
@@ -161,54 +160,46 @@ function createZip(cb: (data: Uint8Array<ArrayBuffer>) => void) {
         }
         if (final) resolve(new Uint8Array(buffer))
     })
-    // dir.ondata = (err, data, final) => {
-    //     if (err) reject(err)
-    //     else {
-    //         cb(data)
-    //         buffer.push(...data)
-    //     }
-    //     if (final) resolve(new Uint8Array(buffer))
-    // }
     return {
         dir,
         promise
     }
 }
 
-function progressBar() {
-    const el = document.createElement('progress')
-    el.value = 0
-    return el
-}
+class ProgressContainer {
+    progress
+    dom
+    constructor(label: string) {
+        const wrapper = this.dom = document.createElement('div')
+        wrapper.classList.add('alert')
 
-function createLabel(text: string) {
-    const span = document.createElement('span')
-    span.textContent = text
-    span.classList.add('label')
+        const span = document.createElement('span')
+        span.textContent = label
+        span.classList.add('label')
 
-    return span
-}
+        const progress = this.progress = document.createElement('progress')
+        progress.value = 0
 
-function progressContainer(label: string) {
-    const wrapper = document.createElement('div')
-    wrapper.classList.add('alert')
-    wrapper.append(createLabel(label))
+        wrapper.append(span, progress)
+    }
+    set max(value: number) {
+        this.progress.max = Number(value)
+    }
 
-    return {
-        wrapper,
-        bar: wrapper.appendChild(progressBar()),
-        set max(value: number) {
-            this.bar.max = Number(value)
-        },
-        set value(value) {
-            this.bar.value = Number(value)
-        },
-        get value() { return this.bar.value },
-        toggle() {
-            wrapper.classList.toggle('alert-soft')
-        }
+    get value(){return this.progress.value}
+    set value(v) {this.progress.value = v}
+
+    inc() {
+        this.progress.value++
+    }
+
+    toggle() {
+        this.dom.classList.toggle('alert-soft')
     }
 }
+
+ 
+ 
 async function zipContainer(container: Container, opts: Options | null) {
     const toast = document.createElement('div')
     toast.id = 'progress'
@@ -216,23 +207,23 @@ async function zipContainer(container: Container, opts: Options | null) {
 
     const files = Object.entries(container.files())
 
-    const converter = progressContainer('Convert')
-    toast.append(converter.wrapper)
+    const converter = new ProgressContainer('Convert')
+    toast.append(converter.dom)
 
 
-    let kepubifyProgress: ReturnType<typeof progressContainer> | null = null
+    let kepubifyProgress: ProgressContainer | null = null
     if (opts) {
-        kepubifyProgress = progressContainer('KEPUB')
-        toast.append(kepubifyProgress.wrapper)
+        kepubifyProgress = new ProgressContainer('KEPUB')
+        toast.append(kepubifyProgress.dom)
     }
 
-    const finalise = progressContainer("Finalize")
-    toast.append(finalise.wrapper)
+    const finalise = new ProgressContainer("Finalize")
+    toast.append(finalise.dom)
 
     document.body.append(toast)
 
     converter.toggle()
-    const toEpub = createZip(() => converter.value++)
+    const toEpub = createZip(() => converter.inc())
     files.forEach(([name, buffer]) => {
         const file = new AsyncZipDeflate(name)
         toEpub.dir.add(file)
@@ -269,7 +260,7 @@ async function zipContainer(container: Container, opts: Options | null) {
 
     finalFiles.forEach(([name, fileData]) => {
         if (import.meta.env.DEV) {
-            console.debug(`Adding file: %s`, name,fileData)
+            console.debug(`Adding file: %s`, name, fileData)
         }
         if (fileData instanceof Uint8Array) {
             const file = new AsyncZipDeflate(name)
