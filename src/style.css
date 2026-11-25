@@ -14,8 +14,8 @@
 }
 
 main {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 3em 1fr 2em;
     justify-content: center;
  
 
