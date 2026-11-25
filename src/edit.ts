@@ -215,7 +215,7 @@ async function zipContainer(container: Container, opts: Options | null) {
 
     let kepubifyProgress: ReturnType<typeof progressContainer> | null = null
     if (opts) {
-        kepubifyProgress = progressContainer('Kepbuify')
+        kepubifyProgress = progressContainer('KEPUB')
         toast.append(kepubifyProgress.wrapper)
     }
 
@@ -288,4 +288,5 @@ async function zipContainer(container: Container, opts: Options | null) {
     const anchor = container.createDownload(download, buffer)
     anchor.classList.add('alert', 'alert-soft')
     toast.append(anchor)
+    anchor.click()
 }
