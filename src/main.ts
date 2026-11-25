@@ -1,7 +1,7 @@
- 
+import { kepubOpts } from './convert';
+import { setMessage } from './dom';
 import './edit';
-import { setMessage } from './msgs';
-
+ 
 function keypubifyCheckbox(key: string, desc: string) {
   const label = document.createElement('label')
   const input = label.appendChild(document.createElement('input'))
@@ -21,65 +21,81 @@ function keypubifyCheckbox(key: string, desc: string) {
   ]
 }
 
-const fieldset = document.querySelector('fieldset')!
+function epubFieldset() {
+  const fieldset = document.querySelector('fieldset')!
+  Object.entries(kepubOpts).forEach(([key, desc]) => {
+    fieldset.append(...keypubifyCheckbox(key, desc))
+  })
 
-fieldset.append(...keypubifyCheckbox('hyphenate', 'Force-enables (except in headings and table cells) or  force-disables hyphenation. If unset, it is left to the  book and reader styling.').concat(keypubifyCheckbox('smartypants', 'Converts punctuation to smart punctuation.')).concat(keypubifyCheckbox('dummyTitlepage', 'Force-enables or force-disables adding a dummy titlepage to fix layout issues in some books. If unset, a heuristic is used.').concat(keypubifyCheckbox('detectCover', "Shows the book's cover image on the dummy titlepage, if found."))))
-
-const keypubToggler = document.querySelector<HTMLInputElement>('#toggle-keypubify')!
-
-function toggleKeypub() {
-  fieldset.disabled = !keypubToggler.checked
-}
-
-keypubToggler.checked = false
-
-keypubToggler.addEventListener('change', () => { requestAnimationFrame(() => toggleKeypub()) }, { passive: true })
+  const toggler = document.querySelector<HTMLInputElement>('#toggle-keypubify')!
 
 
-
-async function processFile(file?: File | null) {
-  resetDropZone()
-  if (file?.type != 'text/html') {
-    setMessage('Please provide an ".html" file.')
-    return
+  return {
+    sync() {
+      fieldset.disabled = !toggler.checked
+    },
+    toggler,
   }
-
-  const buffer = await file.text()
-  navigation.navigate('', { state: { buffer } })
-}
-const dropEpub = document.querySelector<HTMLFormElement>('#epub-dropzone')!
-
-function resetDropZone() {
-  dropEpub.classList.remove('droppable', 'no-drop')
 }
 
-const dropLabel = dropEpub.querySelector('label')!
+function epubDropzone() {
+    const dom = document.querySelector<HTMLFormElement>('#epub-dropzone')!
 
-dropLabel.addEventListener('dragenter', (ev) => {
- 
+    const label = dom.querySelector('label')!
+    return {
+        dom,
+        label,
+        reset() {
+            dom.classList.remove('droppable', 'no-drop')
+        },
+        async process(file?: File | null) {
+            this.reset()
+            if (file?.type != 'text/html') {
+                setMessage('Please provide an ".html" file.')
+            } else {
+                const buffer = await file.text()
+                navigation.navigate('', { state: { buffer } })
+            }
+        }
+    }
+}
+
+
+
+
+const fieldset = epubFieldset()
+fieldset.toggler.checked = false;
+
+fieldset.toggler.addEventListener('change', () => {
+  requestAnimationFrame(() => fieldset.sync())
+}, { passive: true })
+
+
+const dropzone = epubDropzone()
+
+dropzone.label.addEventListener('dragenter', (ev) => {
   const droppable = ev.dataTransfer?.items[0]?.type == "text/html"
-  dropEpub.classList.add(droppable ? 'droppable' : 'no-drop')
+  dropzone.dom.classList.add(droppable ? 'droppable' : 'no-drop')
 }, { passive: true })
-
-dropLabel.addEventListener('dragover', ev => ev.preventDefault())
-
-dropLabel.addEventListener('drop', ev => {
+dropzone.label.addEventListener('dragover', ev => ev.preventDefault())
+dropzone.label.addEventListener('drop', ev => {
   ev.preventDefault()
-  processFile(ev.dataTransfer?.items[0]?.getAsFile());
+  dropzone.process(ev.dataTransfer?.items[0]?.getAsFile());
 })
-
-dropLabel.addEventListener('dragleave', ev => {
-  if (ev.target == dropLabel) {
-    resetDropZone()
+dropzone.label.addEventListener('dragleave', ev => {
+  if (ev.target == dropzone.label) {
+    dropzone.reset()
   }
 }, { passive: true })
+
+
 
 const htmlInput = document.querySelector<HTMLInputElement>('#html-input')!
 
-htmlInput.addEventListener('change', () => { processFile(htmlInput.files?.item(0)); }, { passive: true })
+htmlInput.addEventListener('change', () => { dropzone.process(htmlInput.files?.item(0)); }, { passive: true })
 
 navigation.addEventListener('currententrychange', function () {
   [...document.forms].forEach(form => form.reset())
   document.querySelectorAll('.toast').forEach(el => el.remove())
-   document.querySelector('#message')?.classList.remove('visible')
+  document.querySelector('#message')?.classList.remove('visible')
 })

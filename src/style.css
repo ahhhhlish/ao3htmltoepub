@@ -93,7 +93,6 @@ html, body, #app, main {
 
 
 fieldset {
-
     &:disabled {
         opacity: 0.5
     }

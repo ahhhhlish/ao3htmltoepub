@@ -1,3 +1,3 @@
 Uses:
-    - daisyui
-    - kepubify (for js)
+- daisyui
+- kepubify (for js)

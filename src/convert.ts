@@ -1,9 +1,6 @@
 const parser = new DOMParser()
 const serialiser = new XMLSerializer()
 
-
-
-
 const publishedRE = /Published: (?<Published>\d{4}-\d{2}-\d{2})/
 const chaptersRE = /Chapters: (?<Chapters>\d+)\/\d+/
 
@@ -164,7 +161,7 @@ export class Container {
         const buffer = await file.bytes();
         this.#image = {
             type,
-            url: URL.createObjectURL(new Blob([buffer], {type})),
+            url: URL.createObjectURL(new Blob([buffer], { type })),
             data: buffer
         }
 
@@ -172,8 +169,8 @@ export class Container {
 
         return this.#image
     }
-    
-     files() {
+
+    files() {
         this.finalise()
         const files: AsyncZippable = this.#image ? { [`cover.${this.#image.type.slice(6)}`]: new Uint8Array(this.#image.data) } : {}
 
@@ -213,10 +210,8 @@ export class Container {
         this.#destroyImage()
         this.#destroyAnchor()
     }
-
-
-
 }
+
 import { strToU8, type AsyncZippable } from 'fflate'
 export function readFile(text: string) {
     const doc = parser.parseFromString(text, "text/html");
@@ -238,3 +233,9 @@ export function readFile(text: string) {
     return container
 }
 
+export const kepubOpts = {
+  hyphenate: 'Force-enables (except in headings and table cells) or  force-disables hyphenation. If unset, it is left to the  book and reader styling.',
+  smartypants: 'Converts punctuation to smart punctuation.',
+  dummyTitlepage: 'Force-enables or force-disables adding a dummy titlepage to fix layout issues in some books. If unset, a heuristic is used.',
+  detectCover: "Shows the book's cover image on the dummy titlepage, if found.",
+}
